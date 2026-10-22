@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        #product-details {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        #product-details h1 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        #product-details img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 0 auto;
+            display: block;
+        }
+
+        #product-details p {
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #666;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: background-color 0.3s ease;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Media Queries */
+
+        /* Extra large devices (1200px and up) */
+        @media (min-width: 1200px) {
+            #product-details {
+                padding: 30px;
+            }
+
+            #product-details h1 {
+                font-size: 2.5rem;
+            }
+
+            #product-details p {
+                font-size: 1.1rem;
+            }
+
+            button {
+                font-size: 1.2rem;
+                padding: 12px 24px;
+            }
+        }
+
+        /* Large devices (992px to 1199px) */
+        @media (min-width: 992px) and (max-width: 1199px) {
+            #product-details {
+                padding: 25px;
+            }
+
+            #product-details h1 {
+                font-size: 2.2rem;
+            }
+
+            #product-details p {
+                font-size: 1.05rem;
+            }
+
+            button {
+                font-size: 1.1rem;
+                padding: 10px 20px;
+            }
+        }
+
+        /* Medium devices (768px to 991px) */
+        @media (min-width: 768px) and (max-width: 991px) {
+            #product-details {
+                padding: 20px;
+            }
+
+            #product-details h1 {
+                font-size: 2rem;
+            }
+
+            #product-details p {
+                font-size: 1rem;
+            }
+
+            button {
+                font-size: 1rem;
+                padding: 10px 20px;
+            }
+        }
+
+        /* Small devices (576px to 767px) */
+        @media (min-width: 576px) and (max-width: 767px) {
+            #product-details {
+                padding: 15px;
+            }
+
+            #product-details h1 {
+                font-size: 1.8rem;
+            }
+
+            #product-details p {
+                font-size: 0.95rem;
+            }
+
+            button {
+                font-size: 0.95rem;
+                padding: 8px 16px;
+            }
+        }
+
+        /* Extra small devices (less than 576px) */
+        @media (max-width: 575px) {
+            body {
+                padding: 10px;
+            }
+
+            #product-details {
+                padding: 10px;
+            }
+
+            #product-details h1 {
+                font-size: 1.6rem;
+            }
+
+            #product-details p {
+                font-size: 0.9rem;
+            }
+
+            button {
+                font-size: 0.9rem;
+                padding: 8px 14px;
+            }
+        }
+
+        /* Very small devices (less than 375px) */
+        @media (max-width: 374px) {
+            #product-details h1 {
+                font-size: 1.4rem;
+            }
+
+            #product-details p {
+                font-size: 0.85rem;
+            }
+
+            button {
+                font-size: 0.8rem;
+                padding: 6px 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="product-details"></div>
+    <button onclick="Back()">Back</button>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const productIndex = urlParams.get('productIndex');
+
+        function getCart() { return JSON.parse(localStorage.getItem('cart') || '[]') }
+        function saveCart(c) { localStorage.setItem('cart', JSON.stringify(c)) }
+        function addToCartById(prod) {
+            const cart = getCart();
+            const existing = cart.find(i => i.id === prod.id);
+            if (existing) existing.quantity++;
+            else cart.push({ id: prod.id, title: prod.title, price: prod.price, image: prod.images[0], quantity: 1 });
+            saveCart(cart);
+            alert('Added to cart');
+        }
+
+        if (productIndex !== null) {
+            fetch('https://dummyjson.com/products?limit=100')
+                .then(response => response.json())
+                .then(data => {
+                    const product = data.products[productIndex];
+                    if (product) {
+                        document.getElementById('product-details').innerHTML =
+                            `<h1>${product.title}</h1>
+                            <img src="${product.images[0]}" alt="${product.title}">
+                            <p>${product.description}</p>
+                            <p style="font-weight:600">$${product.price}</p>
+                            <div style="margin-top:12px"><button id="add-detail">Add to Cart</button></div>`;
+                        document.getElementById('add-detail').addEventListener('click', () => addToCartById(product));
+                    } else {
+                        document.getElementById('product-details').innerHTML = '<p>Product not found.</p>';
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        } else {
+            document.getElementById('product-details').innerHTML = '<p>No product selected.</p>';
+        }
+
+        function Back() {
+            window.location.href = 'fetchApi.html';
+        }
+    </script>
+</body>
+
+</html>

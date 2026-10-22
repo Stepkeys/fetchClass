@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cart</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f7f7f7}
+    .cart{max-width:900px;margin:0 auto;background:#fff;padding:16px;border-radius:8px}
+    .item{display:flex;gap:12px;align-items:center;border-bottom:1px solid #eee;padding:12px 0}
+    .item img{width:80px;height:80px;object-fit:cover;border-radius:6px}
+    .item-info{flex:1}
+    .qty{display:flex;gap:8px;align-items:center}
+    button{cursor:pointer}
+    .tot{font-weight:700;text-align:right;margin-top:12px}
+  </style>
+</head>
+<body>
+  <a href="fetchApi.html">← Continue shopping</a>
+  <div class="cart">
+    <h2>Your Cart</h2>
+    <div style="display:flex;gap:12px;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div>
+        <button id="sync">Sync with Server</button>
+      </div>
+      <div>
+        <button id="clear">Clear Cart</button>
+      </div>
+    </div>
+    <div id="items"></div>
+    <div class="tot">Total: $<span id="total">0</span></div>
+    <div style="text-align:right;margin-top:12px;"><button id="checkout">Checkout</button></div>
+  </div>
+
+  <script>
+    function getCart(){return JSON.parse(localStorage.getItem('cart')||'[]')}
+    function saveCart(c){localStorage.setItem('cart',JSON.stringify(c));render()}
+
+    function render(){
+      const itemsEl = document.getElementById('items');
+      itemsEl.innerHTML='';
+      const cart = getCart();
+      let total = 0;
+      if(cart.length===0){itemsEl.innerHTML='<p>Your cart is empty.</p>'}
+      cart.forEach((it, idx)=>{
+        total += (it.price||0) * it.quantity;
+        const row = document.createElement('div');
+        row.className='item';
+        row.innerHTML = `
+          <img src="${it.image||''}" alt="">
+          <div class="item-info">
+            <div style="font-weight:600">${it.title}</div>
+            <div>$${it.price||0} each</div>
+          </div>
+          <div class="qty">
+            <button onclick="changeQty(${idx}, -1)">-</button>
+            <div>${it.quantity}</div>
+            <button onclick="changeQty(${idx}, 1)">+</button>
+            <button style="margin-left:12px;" onclick="removeItem(${idx})">Remove</button>
+          </div>
+        `;
+        itemsEl.appendChild(row);
+      })
+      document.getElementById('total').textContent = total.toFixed(2);
+    }
+
+    function changeQty(i, delta){
+      const cart = getCart();
+      if(!cart[i]) return;
+      cart[i].quantity += delta;
+      if(cart[i].quantity < 1) cart[i].quantity = 1;
+      saveCart(cart);
+    }
+
+    function removeItem(i){
+      const cart = getCart();
+      cart.splice(i,1);
+      saveCart(cart);
+    }
+
+    document.getElementById('checkout').addEventListener('click', ()=>{
+      const cart = getCart();
+      if(cart.length===0) return alert('Cart empty');
+      // post order to json-server orders
+      fetch('http://localhost:3001/orders', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({items:cart, createdAt: Date.now()})
+      }).then(res=>{
+        if(res.ok){
+          localStorage.removeItem('cart');
+          render();
+          alert('Order placed (demo).');
+        } else alert('Order failed');
+      }).catch(()=>alert('Server not available. Run `npm run start-json-server`.'))
+    });
+
+    document.getElementById('sync').addEventListener('click', ()=>{
+      const cart = getCart();
+      if(cart.length===0) return alert('Cart empty');
+      fetch('http://localhost:3001/cart', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items:cart, createdAt:Date.now()})})
+        .then(res=>res.ok ? alert('Synced') : alert('Sync failed'))
+        .catch(()=>alert('Server not available. Run `npm run start-json-server`.'))
+    });
+
+    document.getElementById('clear').addEventListener('click', ()=>{ localStorage.removeItem('cart'); render(); });
+
+    render();
+  </script>
+</body>
+</html>
